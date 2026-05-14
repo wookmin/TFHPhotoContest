@@ -101,7 +101,8 @@ function App() {
   }
 
   function handleAdminLogin(password) {
-    if (password === 'admin1234') {
+    const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD;
+    if (adminPassword && password === adminPassword) {
       setAdminError('');
       setView(ADMIN_VIEW);
       return true;
