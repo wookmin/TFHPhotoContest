@@ -1,24 +1,44 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function teamDoc(teamName) {
+      return get(/databases/$(database)/documents/teams/$(teamName));
+    }
 
-    // 팀 목록 - 앱 초기화 시 teams.js 기준으로 동기화
+    function teamExists(teamName) {
+      return exists(/databases/$(database)/documents/teams/$(teamName));
+    }
+
+    function validSubmissionShape() {
+      return request.resource.data.keys().hasOnly(['photos', 'updatedAt']) &&
+        request.resource.data.photos is list;
+    }
+
+    function withinQuota(teamName) {
+      return request.resource.data.photos.size() <= teamDoc(teamName).data.quota;
+    }
+
+    // 실사용에서는 팀 명단 수정은 관리자용 서버/CLI에서만 수행하고
+    // 일반 클라이언트에서는 읽기만 허용합니다.
     match /teams/{teamName} {
       allow read: if true;
-      allow create, update: if true;
-      allow delete: if true;
+      allow create, update, delete: if false;
     }
 
-    // 제출 현황 - 등록된 팀 이름으로만 쓰기 허용
+    // 등록된 팀 이름으로만 제출을 허용하고, quota를 넘지 못하게 제한합니다.
     match /submissions/{teamName} {
       allow read: if true;
-      allow write: if exists(/databases/$(database)/documents/teams/$(teamName));
+      allow create, update: if teamExists(teamName) &&
+        validSubmissionShape() &&
+        withinQuota(teamName);
+      allow delete: if false;
     }
 
-    // 심사 결과
+    // 심사 결과는 공개 읽기만 허용합니다.
+    // 쓰기는 관리자용 서버/CLI 또는 인증된 관리자 계정으로 옮기는 것이 안전합니다.
     match /results/latest {
       allow read: if true;
-      allow write: if true;
+      allow write: if false;
     }
 
     // 그 외 모든 경로 차단
