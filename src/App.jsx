@@ -13,6 +13,9 @@ const ADMIN_PASSWORD_VIEW = 'admin-password';
 const SUBMIT_VIEW = 'submit';
 const ADMIN_VIEW = 'admin';
 
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_MS = 60 * 1000;
+
 function App() {
   const [view, setView] = useState(ENTRY_VIEW);
   const [activeName, setActiveName] = useState('');
@@ -20,6 +23,8 @@ function App() {
   const [adminError, setAdminError] = useState('');
   const [seedStatus, setSeedStatus] = useState('idle');
   const [seedMessage, setSeedMessage] = useState('');
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [lockedUntil, setLockedUntil] = useState(null);
   const teamNames = useMemo(() => teams.map((team) => team.name), []);
 
   useEffect(() => {
@@ -101,14 +106,32 @@ function App() {
   }
 
   function handleAdminLogin(password) {
+    if (lockedUntil && Date.now() < lockedUntil) {
+      const remaining = Math.ceil((lockedUntil - Date.now()) / 1000);
+      setAdminError(`너무 많이 시도했습니다. ${remaining}초 후에 다시 시도하세요.`);
+      return false;
+    }
+
     const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD;
     if (adminPassword && password === adminPassword) {
       setAdminError('');
+      setLoginAttempts(0);
+      setLockedUntil(null);
       setView(ADMIN_VIEW);
       return true;
     }
 
-    setAdminError('비밀번호가 올바르지 않습니다.');
+    const nextAttempts = loginAttempts + 1;
+    setLoginAttempts(nextAttempts);
+
+    if (nextAttempts >= MAX_LOGIN_ATTEMPTS) {
+      setLockedUntil(Date.now() + LOCKOUT_MS);
+      setLoginAttempts(0);
+      setAdminError('5회 실패했습니다. 60초 후에 다시 시도하세요.');
+    } else {
+      setAdminError(`비밀번호가 올바르지 않습니다. (${nextAttempts}/${MAX_LOGIN_ATTEMPTS})`);
+    }
+
     return false;
   }
 
@@ -116,6 +139,8 @@ function App() {
     setActiveName('');
     setEntryError('');
     setAdminError('');
+    setLoginAttempts(0);
+    setLockedUntil(null);
     setView(ENTRY_VIEW);
   }
 
