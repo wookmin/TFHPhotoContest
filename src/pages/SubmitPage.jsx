@@ -26,8 +26,27 @@ function formatCount(submissions, quota) {
   return `${submissions}/${quota}장`;
 }
 
+const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']);
+const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024;
+
 function sanitizeFileName(fileName) {
   return fileName.replace(/[^\w.-]+/g, '_');
+}
+
+function validateImageFiles(files) {
+  const invalid = files.filter(
+    (f) => !ALLOWED_MIME_TYPES.has(f.type) && !f.type.startsWith('image/')
+  );
+  if (invalid.length) {
+    return `지원하지 않는 파일 형식입니다: ${invalid.map((f) => f.name).join(', ')}`;
+  }
+
+  const tooBig = files.filter((f) => f.size > MAX_FILE_SIZE_BYTES);
+  if (tooBig.length) {
+    return `파일 크기가 20MB를 초과합니다: ${tooBig.map((f) => f.name).join(', ')}`;
+  }
+
+  return null;
 }
 
 function SubmitPage({ teamName, onBack }) {
@@ -79,6 +98,12 @@ function SubmitPage({ teamName, onBack }) {
     event.target.value = '';
 
     if (!files.length || remaining === 0 || isClosed) {
+      return;
+    }
+
+    const validationError = validateImageFiles(files);
+    if (validationError) {
+      setNotice(validationError);
       return;
     }
 

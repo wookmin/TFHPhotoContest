@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 팀 목록 - 읽기 허용, 초기 시딩(없을 때만 생성) 허용, 수정/삭제 금지
+    match /teams/{teamName} {
+      allow read: if true;
+      allow create: if !exists(/databases/$(database)/documents/teams/$(teamName));
+      allow update, delete: if false;
+    }
+
+    // 제출 현황 - 읽기 허용, 등록된 팀 이름으로만 쓰기 허용
+    match /submissions/{teamName} {
+      allow read: if true;
+      allow write: if exists(/databases/$(database)/documents/teams/$(teamName));
+    }
+
+    // 심사 결과 - 읽기 허용, 쓰기 허용 (어드민 전용이지만 Auth 없이는 제한 불가)
+    match /results/latest {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // 그 외 모든 경로 차단
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
