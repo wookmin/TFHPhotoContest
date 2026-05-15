@@ -11,7 +11,7 @@ Vite + React + Firebase Firestore + Cloudinary + Gemini API로 만든 모바일 
 
 ## 2. Firestore 규칙 설정
 
-개발용으로 아래처럼 임시 허용 규칙을 사용하면 빠르게 테스트할 수 있습니다.
+개발 초기에만 아래처럼 임시 허용 규칙을 사용하고, 실사용 전에는 반드시 더 좁은 규칙으로 교체하세요.
 
 Firestore rules:
 
@@ -25,6 +25,12 @@ service cloud.firestore {
   }
 }
 ```
+
+실사용 메모:
+- 현재 앱의 관리자 비밀번호는 브라우저 환경변수 기반이라 Firestore 규칙에서 안전한 관리자 인증 수단으로 사용할 수 없습니다.
+- 그래서 운영에서는 `teams`, `results` 같은 관리자 쓰기를 클라이언트에서 직접 열어두면 안 됩니다.
+- 이 저장소의 현재 `firestore.rules`는 실사용 기준으로 클라이언트의 `teams`/`results` 쓰기를 막고, 등록된 팀의 `submissions`만 quota 안에서 쓰도록 잠가두는 방향입니다.
+- 관리자 명단 동기화나 결과 저장을 계속 자동화하려면 Firebase Auth 관리자 계정 또는 Admin SDK/Cloud Functions를 붙이는 것을 권장합니다.
 
 ## 3. Cloudinary 업로드 설정
 
@@ -88,3 +94,28 @@ export const teams = [
 ```
 
 앱 첫 실행 시 Firestore `teams` 컬렉션이 비어 있으면 이 파일의 배열을 기준으로 자동 seeding 됩니다.
+
+터미널에서 바로 수정하려면 아래 명령을 사용할 수 있습니다.
+
+```bash
+npm run teams -- list
+npm run teams -- add "최지원" 5
+npm run teams -- update "최지원" 6
+npm run teams -- rename "최지원" "최지연"
+npm run teams -- remove "최지연"
+npm run teams -- sync
+```
+
+설명:
+- `add "<name>" <total> [quota]`: 새 참가자 추가
+- `update "<name>" <total> [quota]`: 기존 참가자 인원/할당 수정
+- `set "<name>" <total> [quota]`: 있으면 수정, 없으면 추가
+- `rename "<oldName>" "<newName>"`: 이름 변경
+- `remove "<name>"`: 참가자 삭제
+- `sync`: `src/data/teams.js` 내용을 Firestore `teams` 컬렉션에 그대로 동기화
+
+주의:
+- 실사용용 `firestore.rules`에서는 클라이언트 쓰기를 막으면 `sync` 명령과 관리자 결과 저장이 실패할 수 있습니다.
+- 그 경우에는 Firebase Auth 로그인 또는 서버(Admin SDK) 경로를 먼저 붙여야 합니다.
+
+`quota`를 생략하면 `total`과 같은 값으로 저장됩니다.
