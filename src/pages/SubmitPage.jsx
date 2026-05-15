@@ -12,13 +12,13 @@ import PhotoItem from '../components/PhotoItem.jsx';
 import Lightbox from '../components/Lightbox.jsx';
 import { uploadImageToCloudinary } from '../utils/mediaUpload.js';
 
+const SUBMISSION_DEADLINE = new Date('2026-05-16T23:59:00');
+
 function getDeadlineState() {
   const now = new Date();
-  const deadline = new Date(now);
-  deadline.setHours(23, 59, 0, 0);
   return {
-    isClosed: now > deadline,
-    deadline,
+    isClosed: now > SUBMISSION_DEADLINE,
+    deadline: SUBMISSION_DEADLINE,
   };
 }
 
