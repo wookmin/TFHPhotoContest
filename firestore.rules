@@ -25,10 +25,16 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
-    // 등록된 팀 이름으로만 제출을 허용하고, quota를 넘지 못하게 제한합니다.
+    // 2026-05-16 23:59 KST (= UTC 14:59) 이후 제출 차단
+    function beforeDeadline() {
+      return request.time.toMillis() < 1778943540000;
+    }
+
+    // 등록된 팀 이름으로만 제출을 허용하고, quota와 마감 시간을 서버에서 강제합니다.
     match /submissions/{teamName} {
       allow read: if true;
-      allow create, update: if teamExists(teamName) &&
+      allow create, update: if beforeDeadline() &&
+        teamExists(teamName) &&
         validSubmissionShape() &&
         withinQuota(teamName);
       allow delete: if false;
