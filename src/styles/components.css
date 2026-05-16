@@ -128,12 +128,14 @@
 }
 
 .submit-page,
-.admin-page {
+.admin-page,
+.results-page {
   padding: 20px 16px;
 }
 
 .submit-header,
 .admin-header,
+.results-header,
 .participant-head,
 .photo-item,
 .table-row,
@@ -145,6 +147,7 @@
 
 .submit-header,
 .admin-header,
+.results-header,
 .participant-head,
 .table-row,
 .result-card {
@@ -152,7 +155,8 @@
 }
 
 .submit-header,
-.admin-header {
+.admin-header,
+.results-header {
   gap: 12px;
 }
 
@@ -346,6 +350,7 @@
 
   .submit-page,
   .admin-page,
+  .results-page,
   .center-panel {
     padding-left: 14px;
     padding-right: 14px;

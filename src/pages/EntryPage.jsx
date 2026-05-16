@@ -6,6 +6,7 @@ function EntryPage({
   error = '',
   onSubmit,
   onPasswordSubmit,
+  onViewResults,
   onBack,
 }) {
   const [value, setValue] = useState('');
@@ -60,6 +61,12 @@ function EntryPage({
         <button className="primary-button" type="submit">
           {mode === 'password' ? '관리자 화면 열기' : '사진 제출하기'}
         </button>
+
+        {mode === 'name' ? (
+          <button className="ghost-button" type="button" onClick={onViewResults}>
+            심사 결과 확인
+          </button>
+        ) : null}
 
         {mode === 'password' ? (
           <button className="ghost-button" type="button" onClick={onBack}>

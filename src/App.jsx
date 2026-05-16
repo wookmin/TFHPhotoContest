@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import EntryPage from './pages/EntryPage.jsx';
 import SubmitPage from './pages/SubmitPage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
+import ResultsPage from './pages/ResultsPage.jsx';
 import { teams } from './data/teams.js';
 import { ensureTeamsSeeded } from './utils/seed.js';
 import { db, isFirebaseConfigured } from './firebase.js';
@@ -12,6 +13,7 @@ const ENTRY_VIEW = 'entry';
 const ADMIN_PASSWORD_VIEW = 'admin-password';
 const SUBMIT_VIEW = 'submit';
 const ADMIN_VIEW = 'admin';
+const RESULTS_VIEW = 'results';
 
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_MS = 60 * 1000;
@@ -144,6 +146,12 @@ function App() {
     setView(ENTRY_VIEW);
   }
 
+  function handleViewResults() {
+    setEntryError('');
+    setAdminError('');
+    setView(RESULTS_VIEW);
+  }
+
   return (
     <main className="app-shell">
       {seedStatus === 'loading' && (
@@ -160,7 +168,11 @@ function App() {
       )}
 
       {seedStatus === 'done' && view === ENTRY_VIEW && (
-        <EntryPage onSubmit={handleEntrySubmit} error={entryError} />
+        <EntryPage
+          onSubmit={handleEntrySubmit}
+          error={entryError}
+          onViewResults={handleViewResults}
+        />
       )}
 
       {seedStatus === 'done' && view === ADMIN_PASSWORD_VIEW && (
@@ -179,6 +191,10 @@ function App() {
 
       {seedStatus === 'done' && view === ADMIN_VIEW && (
         <AdminPage onBack={handleLogout} />
+      )}
+
+      {seedStatus === 'done' && view === RESULTS_VIEW && (
+        <ResultsPage onBack={handleLogout} />
       )}
     </main>
   );
